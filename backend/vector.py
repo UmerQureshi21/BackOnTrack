@@ -5,9 +5,15 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 import os
 import pdfplumber
 import shutil
+from pathlib import Path
 
 df = ""
-with pdfplumber.open("sample-docs/2ME3_Assignment_01_Fall25 copy.pdf") as pdf:
+filepath = "sample-docs/Week 6-2 Agile Software Development - Part 1.pdf"
+
+pdf_dir = Path("sample-docs")
+pdf_files = list(pdf_dir.glob("*.pdf"))
+
+with pdfplumber.open(filepath) as pdf:
     for page in pdf.pages:
         text = page.extract_text()
         if text:
@@ -42,7 +48,7 @@ for i, chunk in enumerate(chunks):
     
     document = Document(
         page_content=clean_chunk,
-        metadata={"source": "2ME3_Assignment_01_Fall25 copy.pdf"},
+        metadata={"source": filepath},
         id=str(i)
     )
     ids.append(str(i))
@@ -62,5 +68,7 @@ vector_store = Chroma(
 vector_store.add_documents(documents=documents, ids=ids)
 
 print("Vector store created successfully")
+
+print(vector_store.get())
 
 retriever = vector_store.as_retriever(search_kwargs={"k": 5})

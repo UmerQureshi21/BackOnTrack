@@ -5,13 +5,14 @@ from vector import retriever
 model = OllamaLLM(model="llama3.2")
 
 template = """
-You are an expert in explaining computer science assignments.
+You are assigned to monitor the conversations of a consenting study group and assess whether those
+conversations are off topic or not.
 
-Here is relevant assignment information: {reviews}
+Here is relevant assignment or lesson information: {reviews}
 
-Here is the question to answer: {question}
+Here are their conversations: {question}
 
-Provide a clear and concise answer based on the assignment details.
+Provide a clear and concise rating of how on task they are from 0 - 100. Only say the rating.
 """
 
 prompt = ChatPromptTemplate.from_template(template)
