@@ -7,19 +7,22 @@ import pdfplumber
 import shutil
 from pathlib import Path
 
-df = ""
-filepath = "sample-docs/Week 6-2 Agile Software Development - Part 1.pdf"
+
 
 pdf_dir = Path("sample-docs")
 pdf_files = list(pdf_dir.glob("*.pdf"))
+dataframes = [{"path": str(filepath), "content": ""}  for filepath in pdf_files]  # Convert Path to string
 
-with pdfplumber.open(filepath) as pdf:
-    for page in pdf.pages:
-        text = page.extract_text()
-        if text:
-            df += text + "\n\n"
 
-print(f"Total extracted text length: {len(df)} characters")
+for i, filepath in enumerate(pdf_files):
+    with pdfplumber.open(filepath) as pdf:
+        df = ""
+        for page in pdf.pages:
+            text = page.extract_text()
+            if text:
+                df += text + "\n\n"
+        dataframes[i]["content"] = df
+
 
 embeddings = OllamaEmbeddings(model="mxbai-embed-large")
 
@@ -37,24 +40,24 @@ splitter = RecursiveCharacterTextSplitter(
     chunk_overlap=50,
     separators=["\n\n", "\n", ". ", " ", ""]
 )
-chunks = splitter.split_text(df)
 
-print(f"Created {len(chunks)} chunks")
+allFileChunks = [{"path": df["path"], "content": splitter.split_text(df["content"])} for df in dataframes]
 
-for i, chunk in enumerate(chunks):
-    clean_chunk = chunk.strip()
-    if not clean_chunk or len(clean_chunk) < 5:
-        continue
+id = 0
+for file_data in allFileChunks:
+    for chunk in file_data["content"]:  # ← Access the content list
+        id += 1
+        clean_chunk = chunk.strip()
+        if not clean_chunk or len(clean_chunk) < 5:
+            continue
     
-    document = Document(
-        page_content=clean_chunk,
-        metadata={"source": filepath},
-        id=str(i)
-    )
-    ids.append(str(i))
-    documents.append(document)
-
-print(f"Adding {len(documents)} documents to vector store")
+        document = Document(
+            page_content=clean_chunk,
+            metadata={"source": str(file_data["path"])},  # ← Use file_data instead of chunk
+            id=str(id)
+        )
+        ids.append(str(id))
+        documents.append(document)
 
 if documents:
     print(f"Chunk size range: {len(documents[0].page_content)} - {len(documents[-1].page_content)} characters")
