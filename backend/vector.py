@@ -11,7 +11,7 @@ from pathlib import Path
 
 pdf_dir = Path("sample-docs")
 pdf_files = list(pdf_dir.glob("*.pdf"))
-dataframes = [{"path": str(filepath), "content": ""}  for filepath in pdf_files]  # Convert Path to string
+dataframes = [{"path": str(filepath), "content": ""}  for filepath in pdf_files]  
 
 
 for i, filepath in enumerate(pdf_files):
@@ -34,7 +34,7 @@ if os.path.exists(db_location):
 documents = []
 ids = []
 
-# Use RecursiveCharacterTextSplitter with much smaller chunks
+# Use this because it can split with much smaller chunks
 splitter = RecursiveCharacterTextSplitter(
     chunk_size=500,
     chunk_overlap=50,
@@ -45,7 +45,7 @@ allFileChunks = [{"path": df["path"], "content": splitter.split_text(df["content
 
 id = 0
 for file_data in allFileChunks:
-    for chunk in file_data["content"]:  # ← Access the content list
+    for chunk in file_data["content"]: 
         id += 1
         clean_chunk = chunk.strip()
         if not clean_chunk or len(clean_chunk) < 5:
@@ -53,7 +53,7 @@ for file_data in allFileChunks:
     
         document = Document(
             page_content=clean_chunk,
-            metadata={"source": str(file_data["path"])},  # ← Use file_data instead of chunk
+            metadata={"source": str(file_data["path"])}, 
             id=str(id)
         )
         ids.append(str(id))
@@ -68,10 +68,11 @@ vector_store = Chroma(
     embedding_function=embeddings
 )
 
-vector_store.add_documents(documents=documents, ids=ids)
-
+# Only add new documents if DB is empty
+if len(vector_store.get()["ids"]) == 0:
+    vector_store.add_documents(documents=documents, ids=ids)
+    
 print("Vector store created successfully")
 
-print(vector_store.get())
 
-retriever = vector_store.as_retriever(search_kwargs={"k": 5})
+retriever = vector_store.as_retriever(search_kwargs={"k": 8})
