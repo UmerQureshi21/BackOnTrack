@@ -85,10 +85,8 @@ function RecordButton({ onTranscriptReceived }: RecordButtonProps) {
           onClick={toggleRecording}
         >
           <div
-            className={`transition-all duration-300 ease-out ${
-              isRecording
-                ? "w-12 h-12 bg-red-500 rounded-md"
-                : "w-20 h-20 bg-red-500 rounded-full"
+            className={`transition-all duration-300 ease-out bg-red-500 rounded-full ${
+              isRecording ? "w-12 h-12" : "w-20 h-20"
             }`}
           />
         </div>
